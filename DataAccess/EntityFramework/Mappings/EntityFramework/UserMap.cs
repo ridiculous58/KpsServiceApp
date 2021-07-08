@@ -17,8 +17,8 @@ namespace DataAccess.EntityFramework.Mappings.EntityFramework
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Id).UseIdentityColumn(increment:1,seed:1);
             builder.HasIndex(x=>x.TcNo).IsUnique();
-            builder.Property(x => x.PasswordHash).HasColumnType("varbinary(250)");
-            builder.Property(x => x.PasswordSalt).HasColumnType("varbinary(250)");
+            builder.Property(x => x.PasswordHash).HasColumnType("varbinary(max)");
+            builder.Property(x => x.PasswordSalt).HasColumnType("varbinary(max)");
         }
     }
 }

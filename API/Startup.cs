@@ -75,6 +75,7 @@ namespace API
             }
 
             loggerFactory.AddLog4Net();
+            app.ConfigureCustomExceptionMiddleware();
 
             app.UseCors(builder => builder.WithOrigins("http://localhost:3000").AllowAnyHeader());
 

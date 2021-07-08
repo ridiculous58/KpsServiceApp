@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Infrastructure.DataAccess;
+using Infrastructure.Entities.Concrete;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Interfaces
 {
-    class IUserOperationClaimDal
+    public interface IUserOperationClaimDal : IEntityRepository<UserOperationClaim>
     {
     }
 }

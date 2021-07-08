@@ -9,7 +9,7 @@ namespace Infrastructure.Extensions
 {
     public static class ExceptionMiddlewareExtensions
     {
-        public static void ConfigureCustomExceptionMiddleware(this ApplicationBuilder app)
+        public static void ConfigureCustomExceptionMiddleware(this IApplicationBuilder app)
         {
             app.UseMiddleware<ExceptionMiddleware>();
         }

@@ -1,13 +1,19 @@
-﻿using Entities.Dtos;
+﻿using DataAccess.Interfaces;
+using Entities.Dtos;
 using Infrastructure.Aspects.Autofac.Logging;
+using Infrastructure.Aspects.Autofac.Validation;
 using Infrastructure.CrossCuttingConcerns.Logging.ElasticLogger;
 using Infrastructure.CrossCuttingConcerns.Logging.Log4Net.Loggers;
 using Infrastructure.Entities.Concrete;
+using Infrastructure.Utilities.BusinessLogic;
 using Infrastructure.Utilities.Results;
 using Infrastructure.Utilities.Security.Hashing;
 using Infrastructure.Utilities.Security.Jwt;
 using Service.Constants;
+using Service.UserControlService;
+using Service.UserControlService.KpsServiceAdapter.Extensions;
 using Service.UserService;
+using Service.ValidationRuleServices.FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,11 +26,18 @@ namespace Service.AuthService
     {
         private IUserService _userService;
         private ITokenHelper _tokenHelper;
-
-        public AuthService(IUserService userService, ITokenHelper tokenHelper)
+        private readonly IUserControlService _userControlService;
+        private readonly IUserOperationClaimDal _userOperationClaimDal;
+        private readonly IOperationClaimDal _operationClaimDal;
+        public AuthService(IUserService userService, ITokenHelper tokenHelper,IUserControlService userControlService,
+            IUserOperationClaimDal userOperationClaimDal,
+            IOperationClaimDal operationClaimDal)
         {
             _userService = userService;
             _tokenHelper = tokenHelper;
+            _userControlService = userControlService;
+            _userOperationClaimDal = userOperationClaimDal;
+            _operationClaimDal = operationClaimDal;
         }
 
         public IDataResult<AccessToken> CreateAccessToken(User user)
@@ -48,22 +61,24 @@ namespace Service.AuthService
 
             return new SuccessDataResult<User>(userToCheck, Messages.SuccessfulLogin);
         }
-
+        [ValidationAspect(typeof(UserForRegisterDtoValidator))]
         public IDataResult<User> Register(UserForRegisterDto userForRegisterDto, string password)
         {
             byte[] passwordHash, passwordSalt;
             HashingHelper.CreatePasswordHash(password,out passwordHash,out passwordSalt);
+
             var user = new User
             {
                 Email = userForRegisterDto.Email,
-                FirstName = userForRegisterDto.FirstName,
-                LastName = userForRegisterDto.LastName,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
                 Status = true,
                 TcNo = userForRegisterDto.TcNo
             };
+            user = _userControlService.FillUserInfo(user);
             _userService.Add(user);
+            var operationCliamId = _operationClaimDal.Get(x=>x.Name == "User").Id;
+            _userOperationClaimDal.Add(new UserOperationClaim { UserId = user.Id, OperationClaimId = operationCliamId });
             return new SuccessDataResult<User>(user, Messages.UserRegistered);
         }
 
